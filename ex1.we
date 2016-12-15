@@ -1,0 +1,54 @@
+<template>
+  <div>
+  <div class='body' onpanmove="move" onpanstart='start' ontouchend='end'>
+    <div style="color:{{color}};left:{{left}}" class='text'></div>
+  </div>
+</div>
+</template>
+
+<style>
+.body{
+  background-color:blue;
+  position:absolute;
+  left:0;
+  bottom:0;
+  right:0;
+  top:0;
+}
+.text{
+  font-size: 100;
+  background-color:red;
+  position:fixed;
+  bottom:100;
+  width:10;
+  height:10;
+}
+</style>
+
+<script>
+module.exports = {
+    data: {
+      firstName: 'John',
+      lastName: 'Smith',
+      color:'yellow',
+      left:335,
+      start_position:335
+    },
+    methods:{
+      start:function(e){
+        console.log(e);
+        this.color='pink';
+      },
+      move:function(e){
+        console.log(e.changedTouches[0].screenX);
+        this.left = e.changedTouches[0].screenX;
+        this.color='green';
+      },
+      end:function(e){
+        console.log(e);
+        this.start_position = this.left;
+        this.color='black';
+      }
+    }
+  }
+</script>
