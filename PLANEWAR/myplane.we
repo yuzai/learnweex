@@ -1,0 +1,23 @@
+<template>
+    <div style="background-color:{{color}};left:{{left}}" class="thumb" >
+      <image src="{{imgurl}}" style="width:80;height:80"></image>
+    </div>
+</template>
+
+<style>
+  .thumb {
+   height: 80;
+   position:fixed;
+   bottom:20;
+    }
+</style>
+
+<script>
+  module.exports = {
+    data: {
+      imgurl: '',
+      color:'red',
+      left:''
+    }
+  }
+</script>
