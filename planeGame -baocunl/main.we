@@ -1,9 +1,9 @@
 <template>
   <div class="game-board" onpanmove="handlepanmove">
 
-    <bullet repeat="(index1,item1) in bulletlist"  track-by="index" left="{{item1.left}}" bottom="{{item1.bottom}}" index="{{item1.index}}" classname="{{item1.classname}}" ></bullet>
+    <bullet repeat="(index1,item1) in bulletlist"  track-by="index" left="{{item1.left}}" bottom="{{item1.bottom}}" classname="{{item1.classname}}" ></bullet>
 
-    <enermy-plane repeat="(index2,item2) in enermylist" track-by="index" left="{{item2.left}}" bottom="{{item2.bottom}}" index="{{item2.index}}" classname="{{item2.classname}}"></enermy-plane>
+    <enermy-plane  repeat="(index2,item2) in enermylist" id="enermy-{{item2.index}}" track-by="index" left="{{item2.left}}" bottom="{{item2.bottom}}" index="{{item2.index}}" hit="{{item2.hit}}"></enermy-plane>
 
     <myplane id="myplane" classname="{{myclassname}}" left="{{left}}"></myplane>
 
@@ -14,10 +14,10 @@
     <div if="Showend" class="end" style="background-color:{{color2}}"   onTouchstart="handleEnd">
       <text style="font-size:30;color:white;" >end</text>
     </div>
-<!--
+
     <div class="addscore" id="addscore" style="bottom:{{addscorebottom}};left:{{addscoreleft}}">
       <text style="font-size:30;color:white;">+100</text>
-    </div> -->
+    </div>
 
     <div class="score">
       <text style="font-size:30;color:white;">Score: {{score}}</text>
@@ -29,7 +29,7 @@
       <div class="dialog-content">
         <div class="dialog-header">
           <text class="dialog-title" style="font-size: 60;color:white;">Game Over</text>
-          <text class="close" onclick="closeDialog">×</text>
+          <text class="close" onTouchstart="closeDialog">×</text>
         </div>
         <div class="dialog-body">
           <text style="font-size: 40;color:white;">当前得分：{{score}}</text>
@@ -74,7 +74,7 @@
     width:100;
     height:50;
     position:fixed;
-    opacity:0;
+    opacity:1;
   }
   .score{
     position:fixed;
@@ -143,6 +143,7 @@ var animation = require('@weex-module/animation');
 var timer1;
 var timer2;
 var timer3;
+var timer4;
 var index1=0;
 var index2=0;
   module.exports = {
@@ -161,39 +162,9 @@ var index2=0;
       comments:'',
       Showstart:true,
       Showend:false,
-      addscorebottom:0,
-      addscoreleft:0
+      addscorebottom:-100,
+      addscoreleft:-100
     },
-    created:function(){
-      this.$on('bulletdisapear',function(e){
-        this.bulletlist=this.bulletlist.filter(function(item){
-          return item.index!=e.detail.index;
-        }.bind(this));
-      });
-      this.$on('enermydisapear',function(e){
-      this.enermylist=this.enermylist.filter(function(item){
-        return item.index!=e.detail.index;
-      }.bind(this));
-      });
-      this.$on('enermyapear',function(e){
-        this.enermylist=this.enermylist.map(function(item,index){
-          if(item.index==e.detail.index){
-            item.bottom=e.detail.bottom;
-          }
-          return item;
-        });
-      });
-      this.$on('bulletapear',function(e){
-        this.bulletlist=this.bulletlist.map(function(item,index){
-          if(item.index==e.detail.index){
-            item.bottom=e.detail.bottom;
-          }
-          return item;
-        });
-      });
-
-    },
-
     methods:{
       handlepanmove:function(event){
         var temp=event.changedTouches[0].screenX;
@@ -209,10 +180,13 @@ var index2=0;
         clearInterval(timer1);
         clearInterval(timer2);
         clearInterval(timer3);
+        clearInterval(timer4);
         this.color2='red';
         this.isShowDialog=true;
         this.left=335;
          this.Showend=false;
+         this.addscoreleft=-100;
+        this.addscorebottom=-100;
         if(this.hitrate<0.5){
           this.comments="下次用心点";
         }
@@ -236,13 +210,27 @@ var index2=0;
        this.Showend=true;
        index1=0;
        index2=0;
+
+       timer4=setInterval(function(){
+         this.bulletlist=this.bulletlist.filter(function(item){
+           item.bottom+=10;
+           return item.bottom<1350;
+         });
+         this.enermylist=this.enermylist.filter(function(item){
+           item.bottom-=10;
+           return item.bottom>-70;
+         });
+       }.bind(this),30);
+
+
+
        timer1=setInterval(function(){
          this.bulletlist.push({'index':index1++,'left':this.left+25,'bottom':100,'classname':'show'});
-       }.bind(this),200);
-       timer2=setInterval(function(){
-         this.enermylist.push({'index':index2++,'left':Math.floor(Math.random()*700)+25,'bottom':1200,'classname':'show'});
-         this.hitrate=(this.score/index2).toFixed(2);
        }.bind(this),500);
+       timer2=setInterval(function(){
+         this.enermylist.push({'index':index2++,'left':Math.floor(Math.random()*700)+25,'bottom':1200,'hit':false});
+         this.hitrate=(this.score/index2/100).toFixed(2);
+       }.bind(this),1000);
 
 
        timer3=setInterval(function(){
@@ -251,41 +239,33 @@ var index2=0;
          for( var i=0;i<this.bulletlist.length;i++){
              var s=this.enermylist[j].left<this.bulletlist[i].left+30&&this.enermylist[j].left+50>this.bulletlist[i].left&&this.enermylist[j].bottom<=this.bulletlist[i].bottom+30&&this.enermylist[j].bottom+50>this.bulletlist[i].bottom;
           //hit
-             if(s&&this.bulletlist[i].classname=='show'&&this.enermylist[j].classname=='show'){
+             if(s&&this.bulletlist[i].classname=='show'&&!this.enermylist[j].hit){
                  this.bulletlist[i].classname='hide';
-                 this.enermylist[j].classname='hide';
-                 this.score++;
-                 this.hitrate=(this.score/index2).toFixed(2);
+                 this.enermylist[j].hit=true;
+                 this.$vm('enermy-'+this.enermylist[j].index).$emit('hit',{index:this.enermylist[j].index});
+                 this.score+=100;
+                 this.hitrate=(this.score/index2/100).toFixed(2);
 
-                //  this.addscoreleft=this.enermylist[j].left;
-                //  this.addscorebottom=this.enermylist[j].bottom+100;
-                //  var testEl = this.$el('addscore');
-                //  animation.transition(testEl,{
-                //    styles:{
-                //      opacity:1,
-                //    },
-                //    duration: 10, //ms
-                //    delay: 0 //ms
-                //  });
-                //  animation.transition(testEl,{
-                //    styles:{
-                //      opacity:0,
-                //      transform: 'translate(0, 50px)'
-                //    },
-                //    duration: 2000, //ms
-                //    delay: 10 //ms
-                //  });
+                 this.addscoreleft=this.enermylist[j].left;
+                this.addscorebottom=this.enermylist[j].bottom+100;
+                setTimeout(function(){
+                  this.addscoreleft=-100;
+                 this.addscorebottom=-100;
+               }.bind(this),100);
              }
          }
          //end
-         if(this.enermylist[j].classname=='show'&&this.enermylist[j].left>this.left-50&&this.enermylist[j].left<this.left+80&&this.enermylist[j].bottom<80){
+         if(!this.enermylist[j].hit&&this.enermylist[j].left>this.left-50&&this.enermylist[j].left<this.left+80&&this.enermylist[j].bottom<80){
            this.myclassname='hide';
            clearInterval(timer1);
            clearInterval(timer2);
            clearInterval(timer3);
+           clearInterval(timer4);
            this.color2='red';
            this.isShowDialog=true;
             this.Showend=false;
+            this.addscoreleft=-100;
+           this.addscorebottom=-100;
            if(this.hitrate<0.5){
              this.comments="下次用心点";
            }
@@ -303,6 +283,7 @@ var index2=0;
      },
 
      closeDialog: function (e) {
+       clearInterval(timer4);
        this.isShowDialog = false;
        this.score=0;
        this.hitrate=0;

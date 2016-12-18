@@ -38,7 +38,7 @@
           this._parent.$emit('bulletdisapear', {'index': this.index});
           clearInterval(timer);
         }
-      }.bind(this),20);
+      }.bind(this),50);
     },
     methods:{
 
