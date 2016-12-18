@@ -1,0 +1,47 @@
+<template>
+    <div style=" background-color:{{backcolor}};left:{{left}};bottom:{{bottom}};" index="{{index}}" class="{{classname}}" >
+    </div>
+</template>
+
+<style>
+  .show {
+   width:45;
+   height:30;
+   position:fixed;
+   background: url('/bullet.jpg');
+   background-size:contain;
+
+    }
+    .hide{
+      width:45;
+      height:30;
+      position:fixed;
+    }
+</style>
+
+<script>
+
+  module.exports = {
+    data: {
+      backcolor:'black',
+      left:'',
+      bottom:'',
+      index:'',
+      classname:''
+    },
+    ready:function(){
+        var timer=setInterval(function(){
+        this._parent.$emit('bulletapear',{'index':this.index,'bottom':this.bottom});
+        this.bottom=this.bottom+10;
+        // console.log(this.bottom);
+        if(this.bottom>=1350){
+          this._parent.$emit('bulletdisapear', {'index': this.index});
+          clearInterval(timer);
+        }
+      }.bind(this),20);
+    },
+    methods:{
+
+    }
+  }
+</script>
