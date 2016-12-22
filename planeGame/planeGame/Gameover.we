@@ -4,11 +4,15 @@
       <div class="dialog-backdrop"></div>
       <div class="dialog-content">
         <div class="dialog-header">
-          <text class="dialog-title">{{dialogTitle}}</text>
+          <text class="dialog-title">Game Over</text>
           <text class="close" onclick="closeDialog">×</text>
         </div>
         <div class="dialog-body">
-          <text>{{dialogBody}}</text>
+          <text style="font-size: 40;color:white;">当前得分：{{score}}</text>
+          <text style="font-size: 40;color:white;">命中率：{{hitrate}}</text>
+        </div>
+        <div class="dialog-footer">
+          <text style="font-size: 40;color:white;">{{comments}}</text>
         </div>
       </div>
     </div>
@@ -24,7 +28,7 @@
   right: 0;
   bottom: 0;
   left: 0;
-  background-color: #000000;
+  background-color: white;
 }
 .dialog {
   position: fixed;
@@ -37,8 +41,9 @@
 }
 .dialog-content {
   width: 450;
-  background-color: #ffffff;
   position: relative;
+  background-color: orange;
+  text-align: center;
 }
 .dialog-header {
   padding: 20;
@@ -50,8 +55,15 @@
 .dialog-body {
   padding: 20;
 }
+.dialog-footer {
+  padding: 20;
+  position: relative;
+  border-top-width: 1;
+  border-top-style: solid;
+  border-top-color: #efefef;
+}
 .close {
-  font-size: 50;
+  font-size: 60;
   position: absolute;
   right: 10;
   top: 10;
@@ -70,15 +82,13 @@
   module.exports = {
     data: {
       isShowDialog: false,
-      dialogTitle: 'HELLO',
-      dialogBody: 'Weex is best!'
+      score: '',
+      hitrate: '',
+      comments:''
     },
     methods: {
-      openDialog: function (e) {
-        this.isShowDialog = true
-      },
       closeDialog: function (e) {
-        this.isShowDialog = false
+        this.isShowDialog = false;
       }
     }
   }

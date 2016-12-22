@@ -1,35 +1,38 @@
 <template>
   <div class="game-board" onpanmove="handlepanmove">
+    <image src='https://coding.net/u/yuzai/p/planewar/git/raw/master/GUI3.jpg' style="width: 750;height: 1350;position:absolute;" resize='cover'></image>
+    <image src='https://coding.net/u/yuzai/p/planewar/git/raw/master/GUI4.jpg' style="width: 750;height: 1350;" resize='cover'></image>
+    <video class="video" onfinish="onfinish" onfail='video_fail' play-status="{{video.play_video}}" src="{{video.src}}" style="width:750;height:1;"></video>
+    <div class='jindutiao' style='width:{{score/5}};'></div>
+    <bullet repeat="(index1,item1) in bulletlist"  track-by="index" left="{{item1.left}}" bottom="{{item1.bottom}}" classname="{{item1.classname}}" ></bullet>
 
-    <bullet repeat="(index1,item1) in bulletlist"  track-by="index" left="{{item1.left}}" bottom="{{item1.bottom}}" index="{{item1.index}}" classname="{{item1.classname}}" ></bullet>
-
-    <enermy-plane repeat="(index2,item2) in enermylist" track-by="index" left="{{item2.left}}" bottom="{{item2.bottom}}" index="{{item2.index}}" classname="{{item2.classname}}"></enermy-plane>
+    <enermy-plane  repeat="(index2,item2) in enermylist" id="enermy-{{item2.index}}" type="{{item2.type}}" track-by="index" left="{{item2.left}}" bottom="{{item2.bottom}}" index="{{item2.index}}" hit="{{item2.hit}}"></enermy-plane>
 
     <myplane id="myplane" classname="{{myclassname}}" left="{{left}}"></myplane>
 
+    <image id='music' src = 'https://raw.githubusercontent.com/yuzai/storeimg/master/music_button.png' style="width: 60;height: 60; position:absolute;right:10;top:10;opacity:{{(music.play===true)?1:0.5}};" resize='cover' onTouchstart="handlemusicclick"></image>
+    <image id='pause' src = 'https://raw.githubusercontent.com/yuzai/storeimg/master/pause.png' style="width: 60;height: 60; position:absolute;right:10;top:90;" onTouchstart='handlePause'></image>
 
     <div if="Showstart" class="start" style="background-color:{{color1}}" onTouchstart="handleStart" >
-      <text style="font-size:30;color:white;">start</text>
+      <text style="font-size:30;color:white;text-align:center">start</text>
     </div>
-    <div if="Showend" class="end" style="background-color:{{color2}}"   onTouchstart="handleEnd">
-      <text style="font-size:30;color:white;" >end</text>
-    </div>
-<!--
+
     <div class="addscore" id="addscore" style="bottom:{{addscorebottom}};left:{{addscoreleft}}">
-      <text style="font-size:30;color:white;">+100</text>
-    </div> -->
+      <text style="font-size:30;color:white;">+{{addscore}}</text>
+    </div>
 
     <div class="score">
       <text style="font-size:30;color:white;">Score: {{score}}</text>
-      <text style="font-size:30;color:white;">Hit rate: {{hitrate}}</text>
+      <!-- <text style="font-size:30;color:white;">Hit rate: {{hitrate}}</text> -->
+      <text style="font-size:30;color:white;">{{status}}</text>
     </div>
 
     <div id="dialog" class="dialog" if="{{isShowDialog}}">
       <div class="dialog-backdrop"></div>
       <div class="dialog-content">
         <div class="dialog-header">
-          <text class="dialog-title" style="font-size: 60;color:white;">Game Over</text>
-          <text class="close" onclick="closeDialog">×</text>
+          <text class="dialog-title" style="font-size: 60;color:white;">{Game Over}</text>
+          <text class="close" onTouchstart="closeDialog">×</text>
         </div>
         <div class="dialog-body">
           <text style="font-size: 40;color:white;">当前得分：{{score}}</text>
@@ -37,6 +40,7 @@
         </div>
         <div class="dialog-footer">
           <text style="font-size: 40;color:white;">{{comments}}</text>
+          <text onclick = 'handleStart'>start</text>
         </div>
       </div>
     </div>
@@ -50,7 +54,22 @@
     left:0;
     bottom:0;
     right:0;
-    background-color:black ;
+    /*background-color:black ;*/
+    /*background:url('https://coding.net/u/yuzai/p/planewar/git/raw/master/GUI3.jpg') ;
+    background-size: cover;*/
+
+  }
+  .video{
+    position:absolute;
+    top:0;
+    left:0;
+  }
+  .jindutiao{
+    background-color: silver;
+    position:absolute;
+    top:0;
+    left:0;
+    height:5;
   }
   .start{
     width:100;
@@ -58,23 +77,13 @@
     position:fixed;
     left:0;
     bottom:0;
-    text-align: center;
-    border-radius: 5px;
-  }
-  .end{
-    width:100;
-    height:50;
-    position:fixed;
-    right:0;
-    bottom:0;
-    text-align: center;
-    border-radius: 5px;
+    border-radius: 20;
   }
   .addscore{
     width:100;
     height:50;
     position:fixed;
-    opacity:0;
+    opacity:1;
   }
   .score{
     position:fixed;
@@ -82,7 +91,7 @@
     left:0;
   }
   .dialog-backdrop {
-    opacity: .5;
+    opacity: .2;
     position: absolute;
     top: 0;
     right: 0;
@@ -104,6 +113,7 @@
     position: relative;
     background-color: orange;
     text-align: center;
+    border-radius: 20;
   }
   .dialog-header {
     padding: 20;
@@ -123,7 +133,7 @@
     border-top-color: #efefef;
   }
   .close {
-    font-size: 50;
+    font-size: 60;
     position: absolute;
     right: 10;
     top: 10;
@@ -139,62 +149,74 @@
 </style>
 
 <script>
-var animation = require('@weex-module/animation');
 var timer1;
 var timer2;
-var timer3;
+var timer;
 var index1=0;
 var index2=0;
+var temp=0;var temp2=0;
   module.exports = {
     data: {
+      status:'init',
       myclassname: 'show',
       color1:'orange',
-      color2:'navy',
       left:335,
       bulletlist:[],
       enermylist:[],
       score:0,
+      addscore:0,
       hitrate:0,
       isShowDialog:false,
       dialogTitle: 'HELLO',
       dialogBody: 'Weex is best!',
       comments:'',
       Showstart:true,
-      Showend:false,
-      addscorebottom:0,
-      addscoreleft:0
+      // Showend:false,
+      addscorebottom:-100,
+      addscoreleft:-100,
+      video:{
+        src:'http://gslb.miaopai.com/stream/iK8YPMJwHez-ot-OqVAWDA__.mp4?vend=miaopai&',
+        play_video:'pause'
+      },
+      music:{
+        play:true
+      }
     },
     created:function(){
-      this.$on('bulletdisapear',function(e){
-        this.bulletlist=this.bulletlist.filter(function(item){
-          return item.index!=e.detail.index;
-        }.bind(this));
-      });
-      this.$on('enermydisapear',function(e){
-      this.enermylist=this.enermylist.filter(function(item){
-        return item.index!=e.detail.index;
-      }.bind(this));
-      });
-      this.$on('enermyapear',function(e){
-        this.enermylist=this.enermylist.map(function(item,index){
-          if(item.index==e.detail.index){
-            item.bottom=e.detail.bottom;
-          }
-          return item;
-        });
-      });
-      this.$on('bulletapear',function(e){
-        this.bulletlist=this.bulletlist.map(function(item,index){
-          if(item.index==e.detail.index){
-            item.bottom=e.detail.bottom;
-          }
-          return item;
-        });
-      });
-
+      // var animation = require('@weex-module/animation');
+      // var target = this.$el('music');
+      // console.log(target);
+      // var option = {
+      //   styles:{
+      //     transition:'rotate(360deg)'
+      //   },
+      //   duration:1000
+      // }
+      // animation.transition(target,option);
     },
-
     methods:{
+      video_fail:function(){
+        var modal = require('@weex-module/modal');
+        modal.toast({
+            'message': '资源加载出错，请检查网络',
+            'duration': 3
+        });
+      },
+      handlemusicclick:function(){
+        this.music.play=!this.music.play;
+        if(this.status==='playing' && this.music.play===true)
+          this.video.play_video='play';
+        else {
+          this.video.play_video='pause';
+        }
+      },
+      music_load:function(){
+        console.log('loaded');
+      },
+      onfinish:function(){
+        this.video.play_video='pause';
+        setTimeout(function(){if(this.music.play) this.video.play_video='play';}.bind(this),1000);
+      },
       handlepanmove:function(event){
         var temp=event.changedTouches[0].screenX;
         if(temp<=0){
@@ -205,87 +227,93 @@ var index2=0;
           this.left=temp;
         }
       },
-      handleEnd:function(){
+      handlePause:function(){
+        this.status='pause';
         clearInterval(timer1);
         clearInterval(timer2);
-        clearInterval(timer3);
-        this.color2='red';
         this.isShowDialog=true;
-        this.left=335;
-         this.Showend=false;
-        if(this.hitrate<0.5){
-          this.comments="下次用心点";
-        }
-        else if(this.hitrate>=0.5&&this.hitrate<0.8){
-          this.comments="再接再厉";
-        }
-        else {
-          this.comments="真棒！真棒！";
-        }
-
+        // this.Showend=false;
+        this.addscoreleft=-100;
+        this.addscorebottom=-100;
+        this.video.play_video = 'pause';
       },
+      // handleEnd:function(){
+      //   clearInterval(timer1);
+      //   clearInterval(timer2);
+      //   this.isShowDialog=true;
+      //   this.left=335;
+      //    this.Showend=false;
+      //    this.addscoreleft=-100;
+      //   this.addscorebottom=-100;
+      //   if(this.hitrate<0.5){
+      //     this.comments="下次用心点";
+      //   }
+      //   else if(this.hitrate>=0.5&&this.hitrate<0.8){
+      //     this.comments="再接再厉";
+      //   }
+      //   else {
+      //     this.comments="真棒！真棒！";
+      //   }
+      //   this.video.play_video = 'pause';
+      //   this.music.play = 'pause';
+      // },
       handleStart:function(){
        this.Showstart=false;
        this.color1='red';
-       this.bulletlist=[];
-       this.enermylist=[];
-       this.score=0;
-       this.hitrate=0;
+      //  this.bulletlist=[];
+      //  this.enermylist=[];
+      //  this.score=0;
+      //  this.hitrate=0;
        this.isShowDialog=false;
-       this.left=335;
-       this.Showend=true;
-       index1=0;
-       index2=0;
-       timer1=setInterval(function(){
-         this.bulletlist.push({'index':index1++,'left':this.left+25,'bottom':100,'classname':'show'});
-       }.bind(this),200);
+      //  this.left=335;
+      //  this.Showend=true;
+      if(this.status==='init'){
+         index1=0;
+         index2=0;
+       }
+       this.status = 'playing';
+
        timer2=setInterval(function(){
-         this.enermylist.push({'index':index2++,'left':Math.floor(Math.random()*700)+25,'bottom':1200,'classname':'show'});
-         this.hitrate=(this.score/index2).toFixed(2);
-       }.bind(this),500);
-
-
-       timer3=setInterval(function(){
+         temp++; temp2++;
        for(var j=0;j<this.enermylist.length;j++){
            var success=0;
          for( var i=0;i<this.bulletlist.length;i++){
-             var s=this.enermylist[j].left<this.bulletlist[i].left+30&&this.enermylist[j].left+50>this.bulletlist[i].left&&this.enermylist[j].bottom<=this.bulletlist[i].bottom+30&&this.enermylist[j].bottom+50>this.bulletlist[i].bottom;
+             if(this.enermylist[j].hit)
+               break;
+             if(this.bulletlist[i].classname=='hide')
+               continue;
           //hit
-             if(s&&this.bulletlist[i].classname=='show'&&this.enermylist[j].classname=='show'){
+             if(this.enermylist[j].left<this.bulletlist[i].left+30&&this.enermylist[j].left+50>this.bulletlist[i].left&&this.enermylist[j].bottom<=this.bulletlist[i].bottom+30&&this.enermylist[j].bottom+50>this.bulletlist[i].bottom){
                  this.bulletlist[i].classname='hide';
-                 this.enermylist[j].classname='hide';
-                 this.score++;
-                 this.hitrate=(this.score/index2).toFixed(2);
-
-                //  this.addscoreleft=this.enermylist[j].left;
-                //  this.addscorebottom=this.enermylist[j].bottom+100;
-                //  var testEl = this.$el('addscore');
-                //  animation.transition(testEl,{
-                //    styles:{
-                //      opacity:1,
-                //    },
-                //    duration: 10, //ms
-                //    delay: 0 //ms
-                //  });
-                //  animation.transition(testEl,{
-                //    styles:{
-                //      opacity:0,
-                //      transform: 'translate(0, 50px)'
-                //    },
-                //    duration: 2000, //ms
-                //    delay: 10 //ms
-                //  });
+                 this.enermylist[j].hit=true;
+                 clearTimeout(timer);
+                 this.addscoreleft=this.enermylist[j].left;
+                 this.addscorebottom=this.enermylist[j].bottom+70;
+                 this.$vm('enermy-'+this.enermylist[j].index).$emit('hit',{index:this.enermylist[j].index});
+                 switch(this.enermylist[j].type){
+                   case 0:this.addscore=10;break;
+                   case 1:this.addscore=100;break;
+                   case 2:this.addscore=50;break;
+                   default:break;
+                 }
+                 this.score+=this.addscore;
+                 this.hitrate=(this.score/index2/100).toFixed(2);
+                 timer=setTimeout(function(){
+                  this.addscoreleft=-100;
+                 this.addscorebottom=-100;
+               }.bind(this),300);
+               break;
              }
          }
-         //end
-         if(this.enermylist[j].classname=='show'&&this.enermylist[j].left>this.left-50&&this.enermylist[j].left<this.left+80&&this.enermylist[j].bottom<80){
+         //die
+         if(!this.enermylist[j].hit&&this.enermylist[j].left>this.left-50&&this.enermylist[j].left<this.left+80&&this.enermylist[j].bottom<80){
            this.myclassname='hide';
            clearInterval(timer1);
            clearInterval(timer2);
-           clearInterval(timer3);
-           this.color2='red';
            this.isShowDialog=true;
-            this.Showend=false;
+            // this.Showend=false;
+            this.addscoreleft=-100;
+           this.addscorebottom=-100;
            if(this.hitrate<0.5){
              this.comments="下次用心点";
            }
@@ -296,23 +324,61 @@ var index2=0;
              this.comments="真棒！真棒！";
            }
            this.$vm('myplane').$emit('explore');
+           this.video.play_video = 'pause';
+           this.status = 'die';
          }
        }
-     }.bind(this),100);
 
+       //产生子弹和敌机
+       if(temp===6){
+         temp=0;
+         this.bulletlist.push({'index':index1++,'left':this.left+25,'bottom':100,'classname':'show'});
+      }
+       if(temp2===12){
+          temp2=0;
+          var x = Math.random();
+          if(x<0.2)
+            this.enermylist.push({'index':index2++,'type':1,'left':Math.floor(Math.random()*700)+25,'bottom':1200,'hit':false});
+          else if(x<0.5)
+            this.enermylist.push({'index':index2++,'type':2,'left':Math.floor(Math.random()*700)+25,'bottom':1200,'hit':false});
+          else {
+            this.enermylist.push({'index':index2++,'type':0,'left':Math.floor(Math.random()*700)+25,'bottom':1200,'hit':false});
+          }
+          this.hitrate=(this.score/index2/100).toFixed(2);
+       }
+     }.bind(this),50);
+     timer1=setInterval(function(){
+       this.bulletlist=this.bulletlist.filter(function(item){
+         item.bottom+=10;
+         return item.bottom<1350;
+       });
+       this.enermylist=this.enermylist.filter(function(item){
+         switch(item.type){
+           case 0:item.bottom-=5;break;
+           case 1:item.bottom-=10;break;
+           case 2:item.bottom-=8;break;
+         }
+         return item.bottom>-70;
+       });
+     }.bind(this),40);
+       if(this.music.play)
+          this.video.play_video = 'play';
      },
 
      closeDialog: function (e) {
+       clearInterval(timer1);
+       clearInterval(timer2);
        this.isShowDialog = false;
        this.score=0;
        this.hitrate=0;
        this.color1='orange';
-       this.color2='navy';
        this.bulletlist=[];
        this.enermylist=[];
        this.myclassname='show';
        this.left=335;
        this.Showstart=true;
+       temp=0;
+       temp2=0;
      }
     }
   }

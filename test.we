@@ -1,5 +1,15 @@
 <template>
-  <div>
-  <ex1></ex1>
-  <div>
+  <div class='mydiv'>
+    <img style="width: 200;height: 200;" src='/p2.png'></img>
+  </div>
 </template>
+<style>
+.mydiv{
+	background-color:blue;
+	position:absolute;
+	left:0;
+	right:0;
+	bottom:0;
+	top:0;
+}
+</style>

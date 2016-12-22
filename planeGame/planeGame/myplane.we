@@ -1,5 +1,6 @@
 <template>
-    <div id="test" style="background-color:{{color}};left:{{left}};" class="{{classname}}" >
+    <div id="test" style="left:{{left}};" class="{{classname}}" >
+      <image src="{{imgurl}}" style="width:80;height:80;"></image>
     </div>
 </template>
 
@@ -9,16 +10,17 @@
      bottom:10;
      width:80;
      height:80;
-     background: url('/myplane.jpg');
-     background-size: contain;
+     opacity:1;
+     /*background: url('https://raw.githubusercontent.com/xhuanhuan/My-multiplayer-blog/master/myplane.jpg');*/
+     /*background-size: contain;*/
     }
     .hide{
       position:fixed;
       bottom:10;
       width:80;
       height:80;
-      background: url('/explore.jpg');
-      background-size:contain;
+      /*background: url('https://raw.githubusercontent.com/xhuanhuan/My-multiplayer-blog/master/explore.jpg');
+      background-size:contain;*/
       opacity:1;
     }
 </style>
@@ -28,12 +30,14 @@ var animation = require('@weex-module/animation');
   module.exports = {
     data: {
       classname:'',
+      imgurl:'https://raw.githubusercontent.com/yuzai/storeimg/master/myplane.png',
       color:'black',
       left:''
     },
     created:function(){
       this.$on('explore',function(){
-        var testEl = this.$el('test')
+        this.imgurl='https://raw.githubusercontent.com/yuzai/storeimg/master/explore.png';
+        var testEl = this.$el('test');
         animation.transition(testEl,{
           styles:{
             opacity:0
@@ -41,7 +45,10 @@ var animation = require('@weex-module/animation');
           duration: 2000, //ms
           delay: 0 //ms
         });
-      });
+        setTimeout(function(){
+          this.imgurl='https://raw.githubusercontent.com/yuzai/storeimg/master/myplane.png';
+        }.bind(this),1000);
+      }.bind(this));
     }
   }
 </script>

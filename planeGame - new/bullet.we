@@ -1,0 +1,33 @@
+<template>
+    <div style="left:{{left}};bottom:{{bottom}};" class="{{classname}}" >
+       <image src="{{imgurl}}" style="width:50;height:50; border-radius: 45;"></image>
+    </div>
+</template>
+
+<style>
+  .show {
+   width:50;
+   height:50;
+   position:fixed;
+   opacity:1;
+   border-radius: 45;
+    }
+    .hide{
+      width:50;
+      height:50;
+      position:fixed;
+      opacity:0;
+      border-radius: 45;
+    }
+</style>
+
+<script>
+  module.exports = {
+    data: {
+      left:'',
+      bottom:'',
+      classname:'',
+      imgurl:'https://github.com/xhuanhuan/My-multiplayer-blog/blob/master/fig/buble.png?raw=true'
+    },
+  }
+</script>
